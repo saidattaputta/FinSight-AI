@@ -1,24 +1,9 @@
-project:
-  name: "FinSight-AI"
-  version: "1.0"
+data:
+  raw: data/raw
+  processed: data/processed
 
-assets:
-  market_data:
-    - "SPY"       # S&P 500 ETF
-    - "^NSEI"     # NIFTY 50
-    - "GC=F"      # Gold Futures
-    - "BTC-USD"   # Bitcoin
-  macro_data:
-    - "^VIX"      # CBOE Volatility Index
-    - "^IRX"      # 13 Week Treasury Bill (Interest Rate)
-    - "^TNX"      # 10 Year Treasury Note (Yield)
+forecast:
+  horizon: 7
 
-data_paths:
-  raw: "data/raw"
-  processed: "data/processed"
-  artifacts: "artifacts"
-  models: "models"
-
-pipeline:
-  validation:
-    missing_threshold: 0.05  # Fail if >5% data is missing
+database:
+  host: localhost
