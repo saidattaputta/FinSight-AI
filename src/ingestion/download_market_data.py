@@ -47,10 +47,13 @@ def download_asset_data(
             progress=False,
             auto_adjust=False,
         )
+        if isinstance(df.columns, pd.MultiIndex):
+            df.columns = df.columns.get_level_values(0)
+        df.reset_index(inplace=True)
         if df.empty:
             raise ValueError(f"No data found for {ticker}")
         output_path = RAW_DATA_PATH / f"{asset_name}.csv"
-        df.to_csv(output_path)
+        df.to_csv(output_path,index=False)
 
         logger.info(f"saved -> {output_path}")
         return df
