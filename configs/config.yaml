@@ -1,9 +1,18 @@
 data:
   raw: data/raw
   processed: data/processed
+  start_date: "2018-01-01"
+  end_date: 
 
 forecast:
   horizon: 7
 
 database:
   host: localhost
+
+assets:
+  sp500: "^GSPC"
+  nifty50: "^NSEI"
+  gold: "GLD"
+  bitcoin: "BTC-USD"
+
