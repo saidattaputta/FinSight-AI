@@ -130,6 +130,24 @@ class TechnicalIndicatorEngine:
         )
         logger.info("rolling std added")
 
+    #  volume indicator
+    def add_obv(self):
+        logger.info("calculating obv")
+        obv = [0]
+        for i in range(1,len(self.df)):
+            current_colse = self.df['Close'].iloc[i]
+            previous_close = self.df['Close'].iloc[i-1]
+            current_volume = self.df['Volume'].iloc[i]
+
+            if current_colse > previous_close:
+                obv.append(obv[-1] + current_volume)
+            elif current_colse < previous_close:
+                obv.append(obv[-1] - current_volume)
+            else:
+                obv.append(obv[-1])
+        self.df['OBV'] = obv
+        logger.info("OBV added")
+
     def summary(self):
         print('\n')
         print('Feature dataset summary')
@@ -162,5 +180,6 @@ if __name__ == '__main__':
         engine.add_bollinger_bands()
         engine.add_atr()
         engine.add_rolling_std()
+        engine.add_obv()
         engine.summary()
         engine.save_features(asset)
