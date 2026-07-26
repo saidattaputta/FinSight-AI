@@ -96,6 +96,40 @@ class TechnicalIndicatorEngine:
 
         logger.info("MACD added")
 
+    # volatility indicators
+    def add_bollinger_bands(self, period: int = 20, num_std: int = 2):
+        logger.info("calculating bollinger bands")
+        middle = self.df['Close'].rolling(window=period).mean()
+        std = self.df['Close'].rolling(window=period).std()
+
+        self.df['BB_Middle'] = middle
+        self.df['BB_Upper'] = middle + (num_std*std)
+        self.df['BB_Lower'] = middle - (num_std * std)
+        logger.info("Bollinger Bands added")
+
+    def add_atr(self,period: int = 14):
+        logger.info("calculating atr")
+        high_low = self.df['High'] - self.df['Low']
+        high_close = (self.df['High'] - self.df['Close'].shift(1)).abs()
+        low_close = (self.df['Low'] - self.df['Close'].shift(1)).abs()
+        tr = pd.concat(
+            [high_low,high_close,low_close],
+            axis=1
+        ).max(axis=1)
+        self.df[f'ATR_{period}'] = (
+            tr.rolling(window=period).mean()
+        )
+        logger.info("ATR added")
+
+    def add_rolling_std(self,period:int = 20):
+        logger.info("Calculating rolling std")
+        self.df[f'Rolling_Std_{period}'] = (
+            self.df['Close']
+            .rolling(window=period)
+            .std()
+        )
+        logger.info("rolling std added")
+
     def summary(self):
         print('\n')
         print('Feature dataset summary')
@@ -125,5 +159,8 @@ if __name__ == '__main__':
         engine.add_rsi()
         engine.add_momentum()
         engine.add_macd()
+        engine.add_bollinger_bands()
+        engine.add_atr()
+        engine.add_rolling_std()
         engine.summary()
         engine.save_features(asset)
