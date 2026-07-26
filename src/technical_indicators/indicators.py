@@ -68,6 +68,34 @@ class TechnicalIndicatorEngine:
         )
         logger.info('momentum added')
 
+    # MACD 
+    def add_macd(self,
+                 fast_period: int = 12,
+                 slow_period: int = 26,
+                 signal_period: int =9,):
+        logger.info("Calculating MACD")
+        ema_fast = self.df['Close'].ewm(
+            span = fast_period,
+            adjust=False
+        ).mean()
+        ema_slow = self.df['Close'].ewm(
+            span = slow_period,
+            adjust = False
+        ).mean()
+
+        self.df['MACD'] = ema_fast - ema_slow
+
+        self.df['MACD_Signal'] = (
+            self.df['MACD']
+            .ewm(span=signal_period,adjust=False)
+            .mean()
+        )
+        self.df['MACD_Histogram'] = (
+            self.df['MACD'] - self.df['MACD_Signal']
+        )
+
+        logger.info("MACD added")
+
     def summary(self):
         print('\n')
         print('Feature dataset summary')
@@ -96,5 +124,6 @@ if __name__ == '__main__':
         engine.add_rsi()
         engine.add_sma()
         engine.add_ema()
+        engine.add_macd()
         engine.summary()
         engine.save_features(asset)
