@@ -1,6 +1,7 @@
 from pathlib import Path
 import logging
 import pandas as pd
+import numpy as np
 from src.ingestion.load_data import load_processed_data
 
 # logging
@@ -148,6 +149,45 @@ class TechnicalIndicatorEngine:
         self.df['OBV'] = obv
         logger.info("OBV added")
 
+    # Time-Series Features
+    def add_lag_features(self,lags=None):
+        if lags is None:
+            lags = [1,3,5,10]
+        logger.info('calculating lag features')
+        for lag in lags:
+            self.df[f'lag_{lag}'] = self.df['Close'].shift(lag)
+        logger.info('Lag features added')
+
+    def add_daily_returns(self):
+        logger.info('calculating daily returns')
+        self.df['Daily_Return'] = self.df['Close'].pct_change()
+        logger.info('Daily returns added')
+
+    def add_log_return(self):
+        logger.info('calculating log returns')
+        self.df['Log_Return'] = np.log(
+            self.df['Close']/self.df['Close'].shift(1)
+        )
+        logger.info('Log returns added')
+
+    def add_rolling_mean(self,period:int=20):
+        logger.info('Calculating rolling mean')
+        self.df[f'Rolling_Mean_{period}'] = (
+            self.df['Close']
+            .rolling(window=period)
+            .mean()
+        )
+        logger.info('Rolling Mean added')
+
+    def add_rolling_volatility(self,period:int=20):
+        logger.info("calculating rolling volatility")
+        self.df[f'Rolling_Volatility_{period}'] = (
+            self.df['Daily_Return']
+            .rolling(window=period)
+            .std()
+        )
+        logger.info('rolling volatility added')
+
     def summary(self):
         print('\n')
         print('Feature dataset summary')
@@ -181,5 +221,10 @@ if __name__ == '__main__':
         engine.add_atr()
         engine.add_rolling_std()
         engine.add_obv()
+        engine.add_lag_features()
+        engine.add_daily_returns()
+        engine.add_log_return()
+        engine.add_rolling_mean()
+        engine.add_rolling_volatility()
         engine.summary()
         engine.save_features(asset)
