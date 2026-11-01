@@ -62,6 +62,9 @@ There is not yet a supported command to launch a complete application or train a
 - Report forecast uncertainty and avoid treating point predictions as investment advice.
 - Validate any risk score before using it for financial decisions.
 
-## Author
 
-Sai Datta Putta
+---
+
+**Sai Datta Putta**
+
+[LinkedIn](https://www.linkedin.com/in/sai-datta-putta/)
