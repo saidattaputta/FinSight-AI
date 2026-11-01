@@ -1,47 +1,87 @@
-# FinSight AI — Financial Market Intelligence & Risk Analytics
+# FinSight AI — Multi-Asset Market Data & Risk Analytics
 
-A Python project scaffold for exploring market data, engineering financial features, and developing forecasting and risk-monitoring workflows across Bitcoin, gold, the S&P 500, and the NIFTY 50.
+FinSight AI is an early-stage Python project for collecting, validating, and preprocessing historical market data for the S&P 500, NIFTY 50, gold, and Bitcoin. The repository also contains prepared feature CSVs and starter modules for future forecasting, risk, portfolio, and monitoring work.
 
-> **Repository status:** The current tracked project is an early scaffold. The configuration and prepared feature datasets are present, but the application entry points and several modules are empty or not yet implemented. This README distinguishes the intended direction from completed functionality.
+**Current implementation status:** the market-data ETL path is partially implemented. Forecasting, risk evaluation, feature-store, dashboard, API, and application entry points are incomplete or empty in the current repository. This is not yet a complete financial intelligence application.
 
-## Project Direction
+## Scope and Configured Assets
 
-The repository is organized around a multi-asset financial analytics workflow. The configured assets are:
+The configuration in `configs/config.yaml` defines:
 
-- S&P 500 (`^GSPC`)
-- NIFTY 50 (`^NSEI`)
-- Gold ETF (`GLD`)
-- Bitcoin (`BTC-USD`)
+| Asset key | Configured ticker |
+|---|---|
+| S&P 500 | `^GSPC` |
+| NIFTY 50 | `^NSEI` |
+| Gold | `GLD` |
+| Bitcoin | `BTC-USD` |
 
-The configuration sets a historical start date of 2018-01-01 and a seven-step forecast horizon.
+The configured data start date is `2018-01-01`. The configuration also contains a seven-step forecast horizon and a local database host setting; a database-backed workflow is not currently implemented.
 
-## Current Repository Contents
+## Implemented Workflow
 
-- `configs/config.yaml` — asset symbols, date range, data directories, forecast horizon, and database host
-- `configs/paths.py` — project path configuration
-- `data/features/` — prepared feature CSVs for Bitcoin, gold, NIFTY 50, and the S&P 500
-- `notebooks/` — notebook workspace
-- `src/` — planned application modules
-- `requirements.txt` — Python dependencies
+The current ETL path is organized around the following steps:
 
-The repository also contains placeholder entry-point files such as `app.py`, `train.py`, and `predict.py`. They are currently empty in the tracked version and are not runnable application interfaces yet.
+1. **Download:** `src/ingestion/download_market_data.py` uses yfinance to download configured assets and writes CSVs under `data/raw/`.
+2. **Load:** `src/ingestion/load_data.py` reads raw CSVs and parses `Date` as the index.
+3. **Validate:** `src/validation/validation.py` checks required OHLCV columns, missing values, duplicate rows/dates, future dates, negative volume, invalid prices, and numeric data types.
+4. **Preprocess:** `src/preprocessing/preprocess.py` removes duplicate rows, sorts by date, forward/back-fills missing values, filters selected invalid rows, normalizes column names, and writes processed CSVs under `data/processed/`.
+5. **Orchestrate:** `src/ingestion/pipeline.py` downloads the configured assets and runs the validation/preprocessing steps asset by asset.
 
-## Intended Workflow
+```mermaid
+flowchart TD
+    A[Asset symbols and date range in config.yaml] --> B[yfinance download]
+    B --> C[data/raw CSV files]
+    C --> D[Load with Date index]
+    D --> E[OHLCV data validation]
+    E -->|valid| F[Preprocessing]
+    E -->|invalid| G[Skip asset]
+    F --> H[data/processed CSV files]
+```
 
-1. Acquire and validate historical market data.
-2. Align observations across asset classes and trading calendars.
-3. Engineer time-series features.
-4. Analyze price behavior, volatility, and cross-asset relationships.
-5. Develop and evaluate forecasting models.
-6. Translate model outputs into risk indicators or monitoring views.
+The existing CSV files under `data/features/` are committed feature datasets. They are separate from the raw/processed paths used by the current ETL code; the current pipeline does not build or consume those feature files.
 
-This is a project direction, not a claim that all stages are already implemented.
+## Repository Structure
 
-## Technology
+```text
+.
+├── configs/
+│   ├── config.yaml
+│   └── paths.py
+├── data/
+│   └── features/
+│       ├── bitcoin_features.csv
+│       ├── gold_features.csv
+│       ├── nifty50_features.csv
+│       └── sp500_features.csv
+├── notebooks/
+├── src/
+│   ├── ingestion/       # yfinance download, loading, ETL orchestration
+│   ├── validation/      # OHLCV data-quality checks
+│   ├── preprocessing/  # cleaning and processed CSV output
+│   ├── feature_store/  # currently empty implementation file
+│   ├── forecasting/    # currently empty implementation file
+│   ├── risk/            # currently empty implementation file
+│   ├── evaluation/      # currently empty implementation file
+│   ├── alerts/
+│   ├── api/
+│   ├── dashboard/
+│   ├── explainability/
+│   ├── monitoring/
+│   ├── portfolio/
+│   ├── regime_detection/
+│   ├── technical_indicators/
+│   └── utils/
+├── tests/
+├── app.py              # empty placeholder
+├── train.py            # empty placeholder
+├── predict.py          # empty placeholder
+├── Dockerfile          # empty placeholder
+└── requirements.txt
+```
 
-Python, pandas, NumPy, scikit-learn, YAML configuration, CSV-based feature data, and the libraries listed in `requirements.txt`.
+## Setup
 
-## Getting Started
+The repository pins Python package versions in `requirements.txt`.
 
 ```bash
 git clone https://github.com/saidattaputta/FinSight-AI.git
@@ -51,17 +91,20 @@ source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
 pip install -r requirements.txt
 ```
 
-There is not yet a supported command to launch a complete application or train a model. The current codebase should be treated as a development scaffold while the processing and modeling modules are implemented.
+The ETL orchestrator is `src/ingestion/pipeline.py`. It downloads external market data and writes files into `data/raw/` and `data/processed/`; review those paths and preserve any local data before running it. The pipeline has not been executed as part of this README review.
 
-## Research and Engineering Considerations
+## Current Gaps and Validation Notes
 
-- Use time-ordered train/validation/test splits to avoid look-ahead leakage.
-- Compare forecasts against simple naïve and seasonal baselines.
-- Keep adjusted and unadjusted prices, returns, and volatility definitions explicit.
-- Account for non-trading days and different market calendars.
-- Report forecast uncertainty and avoid treating point predictions as investment advice.
-- Validate any risk score before using it for financial decisions.
+- The root `app.py`, `train.py`, `predict.py`, and `Dockerfile` are empty in the current tracked tree.
+- `src/feature_store/build_features.py`, `src/forecasting/train_models.py`, `src/risk/risk_metrics.py`, and `src/evaluation/evaluate.py` are empty.
+- The `tests/` directory contains only an empty package initializer; no executable test suite was found in the tracked tree.
+- The configured `data.raw` / `data.processed` values and the ETL modules' paths should be kept aligned as the project evolves.
+- The committed `data/features/` exports are not generated by the current ETL orchestrator.
+- Market data retrieval requires network access and may return revised or incomplete historical data.
 
+## Recommended Next Work
+
+Complete and validate feature engineering, time-series forecasting, risk metrics, evaluation, and monitoring modules; add non-destructive automated tests; connect the committed feature exports to a reproducible pipeline; and define explicit time-based validation and benchmark baselines before reporting predictive performance.
 
 ---
 
